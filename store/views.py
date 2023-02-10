@@ -55,7 +55,7 @@ def collection_list(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-@api_view()
+@api_view(['GET', 'PUT', 'DELETE'])
 def collection_detail(request, pk):
     collection = get_object_or_404(Collection.objects.annotate(
         products_count=Count('products')), pk=pk)
