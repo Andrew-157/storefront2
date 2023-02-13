@@ -1,6 +1,6 @@
 from decimal import Decimal
+from store.models import Cart, CartItem, Product, Collection, Review
 from rest_framework import serializers
-from .models import Product, Collection, Review, Cart, CartItem
 
 
 class CollectionSerializer(serializers.ModelSerializer):
@@ -16,9 +16,9 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = ['id', 'title', 'description', 'slug', 'inventory',
                   'unit_price', 'price_with_tax', 'collection']
+
     price_with_tax = serializers.SerializerMethodField(
         method_name='calculate_tax')
-    # collection = CollectionSerializer()
 
     def calculate_tax(self, product: Product):
         return product.unit_price * Decimal(1.1)
@@ -30,7 +30,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ['id', 'date', 'name', 'description']
 
     def create(self, validated_data):
-        product_id = self.context['product_pk']
+        product_id = self.context['product_id']
         return Review.objects.create(product_id=product_id, **validated_data)
 
 
@@ -71,7 +71,7 @@ class AddCartItemSerializer(serializers.ModelSerializer):
     def validate_product_id(self, value):
         if not Product.objects.filter(pk=value).exists():
             raise serializers.ValidationError(
-                'No product with this ID was Found')
+                'No product with the given ID was found.')
         return value
 
     def save(self, **kwargs):
