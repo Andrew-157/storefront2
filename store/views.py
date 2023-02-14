@@ -11,7 +11,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from .models import Product, Collection, OrderItem, Review, Cart, CartItem, Customer, Order
 from .serializers import CreateOrderSerializer, OrderSerializer, AddCartItemSerializer, CustomerSerializer, \
     UpdateCartItemSerializer, ProductSerializer, CollectionSerializer, ReviewSerializer, \
-    CartSerializer, CartItemSerializer
+    CartSerializer, CartItemSerializer, CreateOrderSerializer
 from .filters import ProductFilter
 from .pagination import DefaultPagination
 from .permissions import IsAdminOrReadOnly, ViewCustomerHistoryPermission
@@ -110,13 +110,18 @@ class CustomerViewSet(ModelViewSet):
 class OrderViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
+    def create(self, request, *args, **kwargs):
+        serializer = CreateOrderSerializer(data=request.data,
+                                           context={'user_id': self.request.user.id})
+        serializer.is_valid(raise_exception=True)
+        order = serializer.save()
+        serializer = OrderSerializer(order)
+        return Response(serializer.data)
+
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return CreateOrderSerializer
         return OrderSerializer
-
-    def get_serializer_context(self):
-        return {'user_id': self.request.user.id}
 
     def get_queryset(self):
         user = self.request.user
